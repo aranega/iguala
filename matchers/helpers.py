@@ -74,7 +74,7 @@ class IdentitySet(MutableSet):
         return f"{self.__class__.__name__}({list(self)})"
 
 
-def flat(iterable, iterable_cls=(list, set)):
+def flat(iterable, iterable_cls=(list, set, tuple)):
     if not isinstance(iterable, iterable_cls):
         return [iterable]
     try:

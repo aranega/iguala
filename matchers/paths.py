@@ -5,6 +5,10 @@ class ObjectPath(object):
     def as_path(self):
         return self
 
+    @property
+    def is_recursive(self):
+        return False
+
 
 class DictPath(ObjectPath):
     def __init__(self, path):
@@ -36,7 +40,8 @@ class ComposedPath(ObjectPath):
         tmp = [obj]
         for path in self.paths:
             copy = [*tmp]
-            tmp.clear()
+            if not path.is_recursive:
+                tmp.clear()
             for intermediate in copy:
                 try:
                     result = path.resolve_from(intermediate)
@@ -53,16 +58,20 @@ class RecursivePath(ObjectPath):
         res = [x for x in o if x is not None and x not in seen]
         direct_objects.extend(res)
         seen |= res
+        if obj not in seen:
+            seen.add(obj)
         direct_objects.extend(
             flat([self._resolve_from(x, seen) for x in direct_objects])
         )
-        if obj not in seen:
-            seen.add(obj)
         return direct_objects
 
     def resolve_from(self, obj):
         res = self._resolve_from(obj, IdentitySet())
         return res
+
+    @property
+    def is_recursive(self):
+        return True
 
 
 class NamedRecursivePath(RecursivePath):
@@ -106,5 +115,7 @@ def as_path(s, dictkey=False):
     if isinstance(s, str):
         if s[-1] == "*":
             return NamedRecursivePath(as_path(s[:-1], dictkey=dictkey))
+        if s[-1] == "+":
+            return ComposedPath((as_path(s[:-1], dictkey=dictkey), NamedRecursivePath(as_path(s[:-1], dictkey=dictkey))))
 
     return dict_cls(s)
