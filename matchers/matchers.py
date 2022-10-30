@@ -79,9 +79,17 @@ class SaveNodeMatcher(Matcher):
         return self.matcher.match_context(obj, context)
 
 
+class IdentityMatcher(Matcher):
+    def __init__(self, value):
+        self.value = value
+
+    def match_context(self, obj, context):
+        context.is_match = obj is self.value
+        return [context]
+
+
 class LiteralMatcher(Matcher):
-    def __init__(self, value, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, value):
         self.value = value
 
     def match_context(self, obj, context):
@@ -410,17 +418,12 @@ def as_matcher(obj):
         return ListWildcardMatcher("")
     if isinstance(obj, type):
         return ObjectMatcher(obj, {})
-    if obj is None or isinstance(obj, (int, float, bool, str)):
+    if isinstance(obj, bool):
+        return IdentityMatcher(obj)
+    if obj is None or isinstance(obj, (int, float, str)):
         return LiteralMatcher(obj)
     if isinstance(obj, list):
         return SequenceMatcher(obj)
     if isinstance(obj, dict):
         return DictMatcher(obj)
-    # match obj:
-    #     case int() | float() | bool() | str() | None:
-    #         return LiteralMatcher(obj)
-    #     case list():
-    #         return SequenceMatcher(obj)
-    #     case dict():
-    #         return DictMatcher(obj)
     return obj.as_matcher()
