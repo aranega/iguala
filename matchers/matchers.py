@@ -1,3 +1,4 @@
+from typing import Sequence
 from .paths import as_path
 from .helpers import flat
 
@@ -409,11 +410,17 @@ def as_matcher(obj):
         return ListWildcardMatcher("")
     if isinstance(obj, type):
         return ObjectMatcher(obj, {})
-    match obj:
-        case int() | float() | bool() | str() | None:
-            return LiteralMatcher(obj)
-        case list():
-            return SequenceMatcher(obj)
-        case dict():
-            return DictMatcher(obj)
+    if obj is None or isinstance(obj, (int, float, bool, str)):
+        return LiteralMatcher(obj)
+    if isinstance(obj, list):
+        return SequenceMatcher(obj)
+    if isinstance(obj, dict):
+        return DictMatcher(obj)
+    # match obj:
+    #     case int() | float() | bool() | str() | None:
+    #         return LiteralMatcher(obj)
+    #     case list():
+    #         return SequenceMatcher(obj)
+    #     case dict():
+    #         return DictMatcher(obj)
     return obj.as_matcher()
