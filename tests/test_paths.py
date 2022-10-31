@@ -95,6 +95,16 @@ def test_itself():
     result = matcher.match(path)
     assert result.is_match
 
+    path = as_path("x+")
+    matcher = match(ComposedPath) % {
+        "paths": [
+            match(DirectPath) % {"path": "x"},
+            match(NamedRecursivePath) % {"path": match(DirectPath) % {"path": "x"}},
+        ]
+    }
+    result = matcher.match(path)
+    assert result.is_match
+
 
 @dataclass
 class InnerTest(object):
