@@ -1,4 +1,4 @@
-from .helpers import flat, IdentitySet
+from .helpers import IdentitySet, flat
 
 
 class ObjectPath(object):
@@ -116,6 +116,11 @@ def as_path(s, dictkey=False):
         if s[-1] == "*":
             return NamedRecursivePath(as_path(s[:-1], dictkey=dictkey))
         if s[-1] == "+":
-            return ComposedPath((as_path(s[:-1], dictkey=dictkey), NamedRecursivePath(as_path(s[:-1], dictkey=dictkey))))
+            return ComposedPath(
+                (
+                    as_path(s[:-1], dictkey=dictkey),
+                    NamedRecursivePath(as_path(s[:-1], dictkey=dictkey)),
+                )
+            )
 
     return dict_cls(s)

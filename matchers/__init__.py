@@ -1,4 +1,4 @@
-from .helpers import match, is_not
+from .helpers import is_not, match
 from .matchers import as_matcher
 from .paths import as_path
 

@@ -31,7 +31,7 @@ class match(object):
 
 
 def is_not(matcher):
-    from .matchers import as_matcher, NotMatcher
+    from .matchers import NotMatcher, as_matcher
 
     if isinstance(matcher, NotMatcher):
         return matcher.matcher

@@ -1,6 +1,7 @@
 from typing import Sequence
-from .paths import as_path
+
 from .helpers import flat
+from .paths import as_path
 
 
 class MatcherResult(object):
