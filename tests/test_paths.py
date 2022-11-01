@@ -1,7 +1,7 @@
 import pytest
 
-from matchers import match
-from matchers.paths import (
+from iguala import match
+from iguala.paths import (
     ChildrenRecursivePath,
     ComposedPath,
     DictPath,

@@ -1,6 +1,6 @@
 import pytest
 
-from matchers import as_matcher
+from iguala import as_matcher
 
 
 @pytest.mark.parametrize(

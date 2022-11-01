@@ -1,4 +1,3 @@
-from ast import Not
 from collections.abc import MutableSet
 from itertools import chain
 
@@ -8,6 +7,7 @@ class match(object):
         from .matchers import ObjectMatcher
 
         self.matcher = ObjectMatcher(cls)
+        self.matcher.properties = {}
 
     def __mod__(self, properties):
         self.matcher.properties = properties
@@ -28,6 +28,9 @@ class match(object):
 
     def such_as(self, properties):
         return self % properties
+
+    def as_matcher(self):
+        return self.matcher
 
 
 def is_not(matcher):
