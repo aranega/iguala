@@ -13,7 +13,7 @@ packages = ['iguala']
 
 setup(
     name='iguala',
-    version='0.0.0',
+    version='0.1.0-dev',
     description=("Non-linear pattern matching for Python's objects, or rexep-like for objects"),
     long_description=open('README.md').read(),
     keywords='pattern matching matcher regexp graph query term rewriting',
