@@ -16,6 +16,7 @@ setup(
     version='0.1.0-dev',
     description=("Non-linear pattern matching for Python's objects, or rexep-like for objects"),
     long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     keywords='pattern matching matcher regexp graph query term rewriting',
     url='https://github.com/aranega/iguala',
     author='Vincent Aranega',
