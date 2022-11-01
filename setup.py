@@ -6,8 +6,8 @@ from setuptools import setup
 
 version = tuple(sys.version_info[:2])
 
-if version < (3, 6):
-    sys.exit('Sorry, Python < 3.6 is not supported')
+if version < (3, 7):
+    sys.exit('Sorry, Python < 3.7 is not supported')
 
 packages = ['iguala']
 
@@ -29,7 +29,6 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
