@@ -113,8 +113,8 @@ Here is a list of some patterns that can be applied to collections:
 * `[..., '@x', ..., '@x']` means a collection that have an element that is equal to the last element
 * `['@x', ..., '@x']` means a collection where the first and the last element are the same
 * `[..., '@x', '@x', ..]` means a collection that have two times the same element that follow each other
-* `[..., '@x', is_not('@x'), ..]` means a collection where two consecutive elements that are not the same (a collection where all elements are different)
-* `is_not([..., '@x', is_not('@x'), ...])` means a collection where there is no consecutive elements that are not the same (a collection where all elements are the same)
+* `[..., '@x', ..., is_not('@x'), ..]` means a collection where two consecutive elements that are not the same (a collection where all elements are different)
+* `is_not([..., '@x', ..., is_not('@x'), ...])` means a collection where there is no consecutive elements that are not the same (a collection where all elements are the same)
 * ...
 
 
