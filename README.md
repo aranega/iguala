@@ -46,7 +46,9 @@ if type(instance) == MyObject and instance.att1 == instance.att2 and instance.na
 
 ## Installation
 
-_Coming soon in Pypi_
+```sh
+pip install iguala
+```
 
 ## Syntax, operators and special characters
 
