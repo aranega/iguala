@@ -231,7 +231,7 @@ class DictMatcher(KeyValueMatcher, Matcher):
         }
 
 
-class MatcherGenerator(Matcher):
+class LambdaBasedMatcher(Matcher):
     __self__ = "__self__"
 
     def __init__(self, fun):
@@ -251,7 +251,18 @@ class MatcherGenerator(Matcher):
             return [context]
         if self.has_self:
             kwargs[self.__self__] = obj
+        return self.execute(obj, context, kwargs)
+
+
+class MatcherGenerator(LambdaBasedMatcher):
+    def execute(self, obj, context, kwargs):
         return as_matcher(self.fun(**kwargs)).match_context(obj, context)
+
+
+class ConditionalMatcher(LambdaBasedMatcher):
+    def execute(self, obj, context, kwargs):
+        context.is_match = self.fun(**kwargs)
+        return [context]
 
 
 class BoundMatcherGenerator(object):
@@ -508,3 +519,6 @@ def as_matcher(obj):
     if isinstance(obj, LambdaType):
         return MatcherGenerator(obj)
     return obj.as_matcher()
+
+
+cond = ConditionalMatcher
