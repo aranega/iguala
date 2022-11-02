@@ -13,7 +13,9 @@ They support:
 * pattern/matchers compositions,
 * composite and recursive paths,
 * yield all combinations found when a pattern matches against an object,
-* matching over dictionary the same way as for classes/objects (more or less).
+* matching over dictionary the same way as for classes/objects (more or less),
+* conditional matchers (you can capture variable and/or the tested object to test a condition),
+* matcher generators (you can capture variables and/or the tested object to produce a new matcher).
 
 More operators/matchers will arrive
 
@@ -95,6 +97,8 @@ Wildcards/variables stores information and checks if the same information appear
 
 There is few pattern operators.
 
+* `match(...)` with a type as parameter matches exactly a type, e.g: `match(A) % {}` means, match an instance of `A` (but not subclasses).
+* `~` used in front of an object matcher expresses "and all its subclasses", e.g: `~match(object) % {}` means, match an instance of `object` or from its subclasses.
 * `%` with a dictionnary on its right expresses the properties of an object, e.g: `match(A) % {'name': 'foo'}` means, match an instance of `A` where the `name` equals `foo`.
 * `@` stores a data into a dedicated name, e.g: `match(A) % {'name': 'foo'} @ 'inst'` means, match an instance of `A` where the `name` equals `foo` and store the instance of `A` in `inst` for further usage.
 * `is_not(...)` expresses a negation (needs to be imported `from iguala import is_not`), e.g: `match(A) % {'name': is_not('foo')}`, means match an instance of `A` where the `name` is not equal to `foo`.
@@ -115,10 +119,26 @@ Here is a list of some patterns that can be applied to collections:
 * `[..., '@x', ..., '@x']` means a collection that have an element that is equal to the last element
 * `['@x', ..., '@x']` means a collection where the first and the last element are the same
 * `[..., '@x', '@x', ..]` means a collection that have two times the same element that follow each other
-* `[..., '@x', ..., is_not('@x'), ..]` means a collection where two consecutive elements that are not the same (a collection where all elements are different)
-* `is_not([..., '@x', ..., is_not('@x'), ...])` means a collection where there is no consecutive elements that are not the same (a collection where all elements are the same)
+* `[..., '@x', ..., is_not('@x'), ..]` means a collection where two elements that are not the same (a collection where all elements are different)
+* `is_not([..., '@x', ..., is_not('@x'), ...])` means a collection where there is no elements that are not the same (a collection where all elements are the same)
 * ...
 
+### Lambda based matchers
+
+Lambdas are used to express patterns over captured variables:
+
+* `lambda VAR1, VAR2, ....: SOMETHINGS WITHS VARS` is a matcher generator.
+Matcher generators uses captured variable to generate new matchers that are executed when all necessary variables have been captured, e.g: `match(A): {'x': '@x', 'y': lambda x: x + 1}` means, match an instance of `A` that have an attribute `x` and an attribute `y` that is equals to `x + 1`.
+* `cond(lambda ....)` is a condition matcher (needs to be imported `from iguala import cond`).
+Condition matchers uses captured variable to execute a function and use the result as matching result. Consequently, the return type of the function must be a boolean, e.g: `match(A): {'x': '@x', 'y': cond(lambda x, __self__: x ==  __self__ + 1)}` means, match an instance of `A` that have an attribute `x` and an attribute `y` that is equals to `x + 1`.
+* `__self__` is a meta-variable that can be passed as arguments of the matcher generator or conditional matcher. This variable resolves to the object currently matched.
+
+Matcher generators and conditional matchers also works with sequence matchers and negative matchers.
+Here is some examples:
+
+* `[..., '@x', lambda x: x + 1, ...]` means a collection where one element is followed by its successor.
+* `[..., '@x', is_not(lambda x: x + 1), ...]` means a collection where one element is not followed by its successor.
+* `is_not([..., '@x', is_not(lambda x: x + 1), ...])` means a collection where there is no element that is not followed by its successor (a collection that is sorted).
 
 ## Walkthrough - Draw me a pattern on an Object
 
