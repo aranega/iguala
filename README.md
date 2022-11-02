@@ -105,7 +105,7 @@ There is few pattern operators.
 
 ### Collections patterns
 
-Here is a list of some patterns that can be applied to collections:
+Here is a list of some examples of patterns that can be applied to collections:
 
 * `[]`, means empty collection
 * `[3]` means a collection with only one value: `3`
@@ -121,7 +121,6 @@ Here is a list of some patterns that can be applied to collections:
 * `[..., '@x', '@x', ..]` means a collection that have two times the same element that follow each other
 * `[..., '@x', ..., is_not('@x'), ..]` means a collection where two elements that are not the same (a collection where all elements are different)
 * `is_not([..., '@x', ..., is_not('@x'), ...])` means a collection where there is no elements that are not the same (a collection where all elements are the same)
-* ...
 
 ### Lambda based matchers
 
@@ -139,6 +138,9 @@ Here is some examples:
 * `[..., '@x', lambda x: x + 1, ...]` means a collection where one element is followed by its successor.
 * `[..., '@x', is_not(lambda x: x + 1), ...]` means a collection where one element is not followed by its successor.
 * `is_not([..., '@x', is_not(lambda x: x + 1), ...])` means a collection where there is no element that is not followed by its successor (a collection that is sorted).
+
+NOTE: Argument names of the function used for the matcher generator or the conditional matcher have to match the name of variables defined in the pattern.
+If other names are used, `iguala` will ignore the matcher, but will generate a warning message stating what are the missing variables and their positions in the pattern.
 
 ## Walkthrough - Draw me a pattern on an Object
 
