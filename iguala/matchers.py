@@ -236,7 +236,7 @@ class MatcherGenerator(Matcher):
 
     def __init__(self, fun):
         self.fun = fun
-        self.vars = fun.__code__.co_varnames[: fun.__code__.co_argcount]
+        self.vars = [*fun.__code__.co_varnames[: fun.__code__.co_argcount]]
         if self.__self__ in self.vars:
             self.has_self = True
             self.vars.remove(self.__self__)
