@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.2.0
+
+### Features
+
+* Add support for matcher generators (syntax is directly bound to lambdas)
+* Add support for conditional matcher using lambdas
+* Add support for regex matchers
+* Add support for range matchers
+
 ## 0.1.0
 
 Initial version of `iguala`:

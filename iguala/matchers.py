@@ -1,3 +1,7 @@
+from collections.abc import MutableMapping
+from re import compile
+from types import LambdaType
+
 from .helpers import flat
 from .paths import as_path
 
@@ -13,6 +17,21 @@ class MatcherResult(object):
     def add_contexts(self, contexts):
         self.contexts.extend(c for c in contexts if c.is_match)
 
+    def analyse_contexts(self):
+        if any(len(c.delayed_matchers) > 0 for c in self.contexts):
+            print(
+                "WARNING: some matcher generators where not executed due to missing variables"
+            )
+            for c in self.contexts:
+                for bc in c.delayed_matchers:
+                    missing_vars = set(bc.matcher.vars) - set(c.bindings)
+                    code = bc.matcher.fun.__code__
+                    file = code.co_filename
+                    line = code.co_firstlineno
+                    print(
+                        f' * generator misses variables {missing_vars} to be executed ("{file}", L{line})'
+                    )
+
     @property
     def bindings(self):
         return [c.bindings for c in self.contexts]
@@ -21,11 +40,34 @@ class MatcherResult(object):
         return f"<{self.is_match} - {self.bindings}>"
 
 
-class Context(object):
+class Context(MutableMapping):
     def __init__(self, truth=True):
         self.bindings = {}
         self._is_match = truth
         self.truth = truth
+        self.delayed_matchers = []
+
+    def __getitem__(self, key):
+        return self.bindings[key]
+
+    def __setitem__(self, key, value):
+        self.bindings[key] = value
+        ctx = []
+        for gencontext in tuple(self.delayed_matchers):
+            if gencontext.can_execute(self):
+                ctx.extend(gencontext.execute(self))
+                self.delayed_matchers.remove(gencontext)
+        if any(not c.is_match for c in ctx):
+            self.is_match = property(lambda self: False)
+
+    def __delitem__(self, key):
+        del self.bindings[key]
+
+    def __iter__(self):
+        return iter(self.bindings)
+
+    def __len__(self):
+        return len(self.bindings)
 
     @property
     def is_match(self):
@@ -38,6 +80,7 @@ class Context(object):
     def copy(self):
         instance = self.__class__(self.truth)
         instance.bindings.update(self.bindings)
+        instance.delayed_matchers.extend(self.delayed_matchers)
         return instance
 
 
@@ -55,7 +98,9 @@ class Matcher(object):
 
     def match(self, obj):
         result = MatcherResult()
-        result.add_contexts(self.match_context(obj, Context()))
+        contexts = self.match_context(obj, Context())
+        result.add_contexts(contexts)
+        result.analyse_contexts()
         return result
 
     def __ror__(self, left):
@@ -74,7 +119,7 @@ class SaveNodeMatcher(Matcher):
         self.matcher = matcher
 
     def match_context(self, obj, context):
-        context.bindings[self.alias] = obj
+        context[self.alias] = obj
         return self.matcher.match_context(obj, context)
 
 
@@ -187,6 +232,79 @@ class DictMatcher(KeyValueMatcher, Matcher):
         }
 
 
+class LambdaBasedMatcher(Matcher):
+    __self__ = "__self__"
+
+    def __init__(self, fun):
+        self.fun = fun
+        self.vars = [*fun.__code__.co_varnames[: fun.__code__.co_argcount]]
+        if self.__self__ in self.vars:
+            self.has_self = True
+            self.vars.remove(self.__self__)
+        else:
+            self.has_self = False
+
+    def match_context(self, obj, context):
+        try:
+            kwargs = {k: context[k] for k in self.vars}
+        except KeyError:
+            context.delayed_matchers.append(BoundMatcherGenerator(self, context, obj))
+            return [context]
+        if self.has_self:
+            kwargs[self.__self__] = obj
+        return self.execute(obj, context, kwargs)
+
+
+class MatcherGenerator(LambdaBasedMatcher):
+    def execute(self, obj, context, kwargs):
+        return as_matcher(self.fun(**kwargs)).match_context(obj, context)
+
+
+class ConditionalMatcher(LambdaBasedMatcher):
+    def execute(self, obj, context, kwargs):
+        context.is_match = self.fun(**kwargs)
+        return [context]
+
+
+class BoundMatcherGenerator(object):
+    def __init__(self, matcher, context, self_object):
+        self.matcher = matcher
+        self.context = context
+        self.self_object = self_object
+
+    def can_execute(self, context):
+        return all(x in context for x in self.matcher.vars)
+
+    def execute(self, context):
+        return self.matcher.match_context(self.self_object, context.copy())
+
+
+class RegexMatcher(Matcher):
+    def __init__(self, regexp, label=None):
+        self.regexp = compile(regexp)
+        self.label = label
+
+    def __rshift__(self, label):
+        self.label = label
+        return self
+
+    def match_context(self, obj, context):
+        result = self.regexp.match(obj)
+        context.is_match = result is not None
+        if self.label:
+            context[self.label] = result
+        return [context]
+
+
+class RangeMatcher(Matcher):
+    def __init__(self, range):
+        self.range = range
+
+    def match_context(self, obj, context):
+        context.is_match = obj in self.range
+        return [context]
+
+
 class WildcardMatcher(Matcher):
     def __init__(self, alias):
         self.alias = alias
@@ -199,11 +317,11 @@ class WildcardMatcher(Matcher):
         if self.is_anonymous:
             context.is_match = True
             return [context]
-        if self.alias in context.bindings:
-            context.is_match = context.bindings[self.alias] == obj
+        if self.alias in context:
+            context.is_match = context[self.alias] == obj
             return [context]
         context.is_match = True
-        context.bindings[self.alias] = obj
+        context[self.alias] = obj
         return [context]
 
 
@@ -413,16 +531,24 @@ def as_matcher(obj):
             return WildcardMatcher(obj[1:])
         if obj.startswith("*"):
             return ListWildcardMatcher(obj[1:])
-    if obj is Ellipsis:
-        return ListWildcardMatcher("")
-    if isinstance(obj, type):
-        return ObjectMatcher(obj, {})
     if isinstance(obj, bool):
         return IdentityMatcher(obj)
     if obj is None or isinstance(obj, (int, float, str)):
         return LiteralMatcher(obj)
+    if obj is Ellipsis:
+        return ListWildcardMatcher("")
     if isinstance(obj, list):
         return SequenceMatcher(obj)
     if isinstance(obj, dict):
         return DictMatcher(obj)
+    if isinstance(obj, LambdaType):
+        return MatcherGenerator(obj)
+    if isinstance(obj, range):
+        return RangeMatcher(obj)
+    if isinstance(obj, type):
+        return ObjectMatcher(obj, {})
     return obj.as_matcher()
+
+
+cond = ConditionalMatcher
+regex = RegexMatcher
