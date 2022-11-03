@@ -15,7 +15,8 @@ They support:
 * yield all combinations found when a pattern matches against an object,
 * matching over dictionary the same way as for classes/objects (more or less),
 * conditional matchers (you can capture variable and/or the tested object to test a condition),
-* matcher generators (you can capture variables and/or the tested object to produce a new matcher).
+* matcher generators (you can capture variables and/or the tested object to produce a new matcher),
+* regex matchers.
 
 More operators/matchers will arrive
 
@@ -101,7 +102,11 @@ There is few pattern operators.
 * `~` used in front of an object matcher expresses "and all its subclasses", e.g: `~match(object) % {}` means, match an instance of `object` or from its subclasses.
 * `%` with a dictionnary on its right expresses the properties of an object, e.g: `match(A) % {'name': 'foo'}` means, match an instance of `A` where the `name` equals `foo`.
 * `@` stores a data into a dedicated name, e.g: `match(A) % {'name': 'foo'} @ 'inst'` means, match an instance of `A` where the `name` equals `foo` and store the instance of `A` in `inst` for further usage.
-* `is_not(...)` expresses a negation (needs to be imported `from iguala import is_not`), e.g: `match(A) % {'name': is_not('foo')}`, means match an instance of `A` where the `name` is not equal to `foo`.
+* `is_not(...)` expresses a negation (needs to be imported `from iguala import is_not`), e.g: `match(A) % {'name': is_not('foo')}`, means match an instance of `A` where the `name` is not equal to `foo`,
+* `regex(...)` expresses a regular expression matcher (needs to be imported `from iguala import regex`). The regex to match needs to be passed as a string, e.g: `match(A) % {'name': regex('[A-Z].*')}`, means match an instance of `A` where the `name` matches the regex `[A-Z].*`.
+    * This matcher supports an additional operator `>>` that is used to store the matching result for further usage. This mecomes really handy to get matched groups (especially if named match group are used), e.g: `match(A) % {'name': regex('[A-Z].*') >> 'match_result'}` will store the "match" object obtained during the regex matching operation under the label `match_result`. This variable will be accessible as all variables, in the result procuded by `iguala`.
+    * The same behavior as describe above can be achieved without using the `>>` by passing an extra argument to `regex(...)`, e.g: `match(A) % {'name': regex('[A-Z].*', label='match_result')}`. Using the operator or not is a matter of taste, the effect is exactly the same.
+
 
 ### Collections patterns
 

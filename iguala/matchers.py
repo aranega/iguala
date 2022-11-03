@@ -1,4 +1,5 @@
 from collections.abc import MutableMapping
+from re import compile
 from types import LambdaType
 
 from .helpers import flat
@@ -278,6 +279,23 @@ class BoundMatcherGenerator(object):
         return self.matcher.match_context(self.self_object, context.copy())
 
 
+class RegexMatcher(Matcher):
+    def __init__(self, regexp, label=None):
+        self.regexp = compile(regexp)
+        self.label = label
+
+    def __rshift__(self, label):
+        self.label = label
+        return self
+
+    def match_context(self, obj, context):
+        result = self.regexp.match(obj)
+        context.is_match = result is not None
+        if self.label:
+            context[self.label] = result
+        return [context]
+
+
 class WildcardMatcher(Matcher):
     def __init__(self, alias):
         self.alias = alias
@@ -522,3 +540,4 @@ def as_matcher(obj):
 
 
 cond = ConditionalMatcher
+regex = RegexMatcher
