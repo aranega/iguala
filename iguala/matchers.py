@@ -296,6 +296,15 @@ class RegexMatcher(Matcher):
         return [context]
 
 
+class RangeMatcher(Matcher):
+    def __init__(self, range):
+        self.range = range
+
+    def match_context(self, obj, context):
+        context.is_match = obj in self.range
+        return [context]
+
+
 class WildcardMatcher(Matcher):
     def __init__(self, alias):
         self.alias = alias
@@ -522,20 +531,22 @@ def as_matcher(obj):
             return WildcardMatcher(obj[1:])
         if obj.startswith("*"):
             return ListWildcardMatcher(obj[1:])
-    if obj is Ellipsis:
-        return ListWildcardMatcher("")
-    if isinstance(obj, type):
-        return ObjectMatcher(obj, {})
     if isinstance(obj, bool):
         return IdentityMatcher(obj)
     if obj is None or isinstance(obj, (int, float, str)):
         return LiteralMatcher(obj)
+    if obj is Ellipsis:
+        return ListWildcardMatcher("")
     if isinstance(obj, list):
         return SequenceMatcher(obj)
     if isinstance(obj, dict):
         return DictMatcher(obj)
     if isinstance(obj, LambdaType):
         return MatcherGenerator(obj)
+    if isinstance(obj, range):
+        return RangeMatcher(obj)
+    if isinstance(obj, type):
+        return ObjectMatcher(obj, {})
     return obj.as_matcher()
 
 
