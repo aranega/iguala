@@ -345,7 +345,10 @@ class SequenceMatcher(Matcher):
 
     def match_context(self, obj, context):
         results = []
-        cursor = Cursor(self.sequence, obj, context)
+        try:
+            cursor = Cursor(self.sequence, obj, context)
+        except Exception:
+            return results
         while cursor.has_next:
             found_combination = False
             while not found_combination and cursor.has_next:
