@@ -103,8 +103,8 @@ class Matcher(object):
         result.analyse_contexts()
         return result
 
-    def __ror__(self, left):
-        ...
+    def __or__(self, right):
+        return OrMatcher(self, as_matcher(right))
 
     def save_as(self, alias):
         return SaveNodeMatcher(alias, self)
@@ -165,7 +165,7 @@ class OrMatcher(Matcher):
         self.left = left
         self.right = right
 
-    def matcher_context(self, obj, context):
+    def match_context(self, obj, context):
         contexts = self.left.match_context(obj, context)
         if any(c.is_match for c in contexts):
             return contexts
