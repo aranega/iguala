@@ -39,6 +39,9 @@ class MatcherResult(object):
     def __str__(self):
         return f"<{self.is_match} - {self.bindings}>"
 
+    def __bool__(self):
+        return self.is_match
+
 
 class Context(MutableMapping):
     def __init__(self, truth=True):
@@ -111,6 +114,11 @@ class Matcher(object):
 
     def __matmul__(self, alias):
         return SaveNodeMatcher(alias, self)
+
+    def __eq__(self, other):
+        result = self.match(other.o)
+        other.bind(result)
+        return result
 
 
 class SaveNodeMatcher(Matcher):
