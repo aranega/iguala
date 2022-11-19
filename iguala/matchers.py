@@ -116,9 +116,20 @@ class Matcher(object):
         return SaveNodeMatcher(alias, self)
 
     def __eq__(self, other):
-        result = self.match(other.o)
-        other.bind(result)
-        return result
+        return self.match(other)
+
+
+class extended(object):
+    def __init__(self, o):
+        self.o = o
+        self.result = None
+
+    def __eq__(self, other):
+        self.result = other == self.o
+        return self.result
+
+    def __iter__(self):
+        return iter([self.o, self.result])
 
 
 class SaveNodeMatcher(Matcher):
