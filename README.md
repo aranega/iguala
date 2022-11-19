@@ -6,6 +6,7 @@ The goal of this project is to provide an easy to use, but powerful, library for
 Patterns are defined in a declarative way and can match complex objects and extract data from them.
 They support:
 
+* logical composition ("or"),
 * wildcards and variables,
 * the reuse of variable accross patterns to express equality,
 * wildcards and variables in collections,
@@ -16,7 +17,8 @@ They support:
 * matching over dictionary the same way as for classes/objects (more or less),
 * conditional matchers (you can capture variable and/or the tested object to test a condition),
 * matcher generators (you can capture variables and/or the tested object to produce a new matcher),
-* regex matchers.
+* regex matchers,
+* compatibility with the `match` of Python (using few tricks, documented below).
 
 More operators/matchers will arrive
 
@@ -107,6 +109,7 @@ There is few pattern operators.
     * This matcher supports an additional operator `>>` that is used to store the matching result for further usage. This mecomes really handy to get matched groups (especially if named match group are used), e.g: `match(A) % {'name': regex('[A-Z].*') >> 'match_result'}` will store the "match" object obtained during the regex matching operation under the label `match_result`. This variable will be accessible as all variables, in the result procuded by `iguala`.
     * The same behavior as describe above can be achieved without using the `>>` by passing an extra argument to `regex(...)`, e.g: `match(A) % {'name': regex('[A-Z].*', label='match_result')}`. Using the operator or not is a matter of taste, the effect is exactly the same.
 * `range(...)`, if you use the `range(...)` constructor (from builtins), a special "range matcher" is created, e.g: `match(A) % {'x': range(0, 5)}` means, match an instance of `A` where `x` is in the range `[0..4]`.
+* `|` expresses a logical "or" between two patterns, e.g: `match(A) % {'name': is_not(m('foo') | 'bar')}`, means match an instance of `A` where `name` is neither `foo` nor `bar`. In this example, `m` is a renaming of the `as_matcher` function made this way: `from iguala import as_matcher as m`.
 
 ### Collections patterns
 
@@ -533,3 +536,97 @@ print(result.bindings)  # displays
 #  {"name": "A", "attr": "y"},
 #  {"name": "B", "attr": "w"}]
 ```
+
+
+## Make `iguala` works with Python's `match` syntax
+
+Since version 3.9, Python owns a specific syntax for structural matching.
+In this context, a pattern-matching in Python is a set of different pattern against which an object is tested.
+The first pattern that answers "yes" to the question "do you match this object" triggers the execution of an indented block.
+There is a kind of overlap between Python's pattern-matching and `iguala`.
+Python's pattern-matching defines a syntax for: (1) defining structural patterns and (2) orchestring those patterns and test them one after the other on an input object (using different `case`).
+`iguala` is an internal DSL to define structural and deep patterns only.
+The patterns you can define with `iguala` are sometimes equivalent, but differs as they allow you to define patterns that returns many results.
+Also, currently, there is no way of mixing definition of patterns between Python and `iguala`.
+However, it's possible to use `iguala` patterns with the `case` syntax, but it requires a little trick.
+
+### Defining a set of `iguala` patterns
+
+The "problem" with Python's pattern-matching syntax is that you cannot reference an external variable.
+
+```python
+x = 3
+
+match 4:
+    case x:
+        print("The variable x capture all values")
+```
+
+To overcome this "limitation" (it's not a limitation, but in our case, it can feel like it), we will define a class with all the patterns we want as class variable.
+
+```python
+from iguala import as_matcher as m
+
+class Patterns(object):
+    case1 = match(A) % {"x": "@x"}
+    case2 = match(B) % {"y": 4}
+    case3 = m([1, "*value", 3, ...])  # we want that the list starts with 1, then there is a bunch of 3 inside at any position
+```
+
+### Integrating `iguala` patterns with Python `case` syntax
+
+Then, from here, we can pass them to the `case` syntax:
+
+```python
+instance = ...  # an existing object
+
+match instance:
+    case Patterns.case1 as x:
+        print("I matched the first case", x)
+    case Patterns.case2 as x:
+        print("I matched the second case", x)
+    case Patterns.case3 as x:
+        print("I matched the third case", x)
+    case 4:
+        print("I matched the number 4")
+    case _:
+        print("I'm something else")
+```
+
+The `match` operation will try to see which of the `case` actually matches and, if it does, will store `instance` in `x` for the first 3 cases.
+
+### Accessing the results/bindings of an `iguala` pattern
+
+With the current version, there is no way of accessing all the bindings and results produced by an `iguala` matcher.
+To do so, we need to cheat a little bit more and to ask for an `extended` match of `instance`.
+
+```python
+from iguala import extended
+
+instance = ...  # an existing object
+
+match extended(instance):
+    case Patterns.case1 as x:
+        o, result = x
+        print("I matched the first case", result)
+    case Patterns.case2 as x:
+        o, result = x
+        print("I matched the second case", result)
+    case Patterns.case3 as x:
+        o, result = x
+        print("I matched the third case", result)
+    case 4:
+        print("I matched the number 4")
+    case _:
+        print("I'm something else")
+```
+
+This time, stored in `x` will not be the `instance` object, but a wrapper giving access to `o` the object that matched (`x.o`) and `result` the result of the match (`x.result`).
+This wrapper that can be spread.
+With that, in `result` we can access now all the combination that made that pattern match.
+
+We can see that it is easy to integrate `iguala` patterns with Python's pattern-matching mecanism, providing thus a way to extend it for not so expensive.
+The counterpart of this current solution is that if `extended(...)` is used, it's important to remember that the object that will be captured is a wrapper over the tested instance.
+
+NOTE: the `extended` function is still a prototype and can be changed in further versions.
+NOTE2: some more syntactic sugar could be added to ease the patterns set definition, but for a first PoC, it's sufficient.
