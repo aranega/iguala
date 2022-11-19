@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.3.0
+
+### Features
+
+* Add support for logical "or" matching
+* Add support/compatiblity with Python's pattern-matching syntax
+
 ## 0.2.0
 
 ### Features

@@ -39,6 +39,9 @@ class MatcherResult(object):
     def __str__(self):
         return f"<{self.is_match} - {self.bindings}>"
 
+    def __bool__(self):
+        return self.is_match
+
 
 class Context(MutableMapping):
     def __init__(self, truth=True):
@@ -103,14 +106,30 @@ class Matcher(object):
         result.analyse_contexts()
         return result
 
-    def __ror__(self, left):
-        ...
+    def __or__(self, right):
+        return OrMatcher(self, as_matcher(right))
 
     def save_as(self, alias):
         return SaveNodeMatcher(alias, self)
 
     def __matmul__(self, alias):
         return SaveNodeMatcher(alias, self)
+
+    def __eq__(self, other):
+        return self.match(other)
+
+
+class extended(object):
+    def __init__(self, o):
+        self.o = o
+        self.result = None
+
+    def __eq__(self, other):
+        self.result = other == self.o
+        return self.result
+
+    def __iter__(self):
+        return iter([self.o, self.result])
 
 
 class SaveNodeMatcher(Matcher):
@@ -165,7 +184,7 @@ class OrMatcher(Matcher):
         self.left = left
         self.right = right
 
-    def matcher_context(self, obj, context):
+    def match_context(self, obj, context):
         contexts = self.left.match_context(obj, context)
         if any(c.is_match for c in contexts):
             return contexts
@@ -345,7 +364,10 @@ class SequenceMatcher(Matcher):
 
     def match_context(self, obj, context):
         results = []
-        cursor = Cursor(self.sequence, obj, context)
+        try:
+            cursor = Cursor(self.sequence, obj, context)
+        except Exception:
+            return results
         while cursor.has_next:
             found_combination = False
             while not found_combination and cursor.has_next:
