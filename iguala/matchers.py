@@ -574,3 +574,4 @@ def as_matcher(obj):
 
 cond = ConditionalMatcher
 regex = RegexMatcher
+is_ = IdentityMatcher

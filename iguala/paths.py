@@ -93,9 +93,12 @@ class ChildrenRecursivePath(RecursivePath):
             visit = vars(obj).items()
         except TypeError:
             try:
-                visit = obj.items()
+                visit = {k: getattr(obj, k) for k in obj.__class__.__slots__}.items()
             except AttributeError:
-                return []
+                try:
+                    visit = obj.items()
+                except AttributeError:
+                    return []
         for _, v in visit:
             direct_objects.extend(super()._resolve_from(obj, seen, v))
         return direct_objects
@@ -103,7 +106,7 @@ class ChildrenRecursivePath(RecursivePath):
 
 def as_path(s, dictkey=False):
     dict_cls = DictPath if dictkey else DirectPath
-    if ">" in s:
+    if isinstance(s, str) and ">" in s:
         paths = tuple(as_path(p, dictkey=dictkey) for p in s.split(">"))
         return ComposedPath(paths)
     if isinstance(s, ObjectPath):
