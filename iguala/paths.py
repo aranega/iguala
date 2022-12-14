@@ -1,3 +1,5 @@
+from types import LambdaType
+
 from .helpers import IdentitySet, flat
 
 
@@ -30,6 +32,20 @@ class DirectPath(ObjectPath):
             return flat(getattr(obj, self.path, []))
         except AttributeError:
             return []
+
+
+class LambdaPath(ObjectPath):
+    def __init__(self, func):
+        self.func = func
+
+    def resolve_from(self, obj):
+        raw_path = self.func()
+        path = as_path(raw_path)
+        import ipdb
+
+        ipdb.set_trace()
+
+        return path.resolve_from(obj)
 
 
 class ComposedPath(ObjectPath):
@@ -111,6 +127,8 @@ def as_path(s, dictkey=False):
         return ComposedPath(paths)
     if isinstance(s, ObjectPath):
         return s
+    if isinstance(s, LambdaType):
+        return LambdaPath(s)
     if not isinstance(s, str):
         return s.as_path()
     if s == "*":
