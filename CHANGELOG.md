@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 0.4.0
+
+### Features
+
+* Add support for classes with `__slots__`
+
+### Fixes
+
+* Fix issue with matcher wrappers and collections. When a container matcher (`SaveNodeMatcher` or `NotMatcher`) is used, it needs to be considered as a collection matcher only if the matcher it wrapps is a collection matcher.
+
+
+### Misc.
+
+* More tests
+
 ## 0.3.0
 
 ### Features
