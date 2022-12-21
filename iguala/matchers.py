@@ -137,6 +137,14 @@ class SaveNodeMatcher(Matcher):
         self.alias = alias
         self.matcher = matcher
 
+    @property
+    def is_collection_matcher(self):
+        return self.matcher.is_collection_matcher
+
+    @property
+    def is_list_wildcard(self):
+        return self.matcher.is_list_wildcard
+
     def match_context(self, obj, context):
         context[self.alias] = obj
         return self.matcher.match_context(obj, context)
@@ -167,6 +175,10 @@ class LogicalMatcher(Matcher):
 class NotMatcher(Matcher):
     def __init__(self, matcher):
         self.matcher = matcher
+
+    @property
+    def is_collection_matcher(self):
+        return self.matcher.is_collection_matcher
 
     def match_context(self, obj, context):
         truth = not context.truth
@@ -574,3 +586,4 @@ def as_matcher(obj):
 
 cond = ConditionalMatcher
 regex = RegexMatcher
+is_ = IdentityMatcher

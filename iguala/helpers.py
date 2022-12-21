@@ -41,18 +41,6 @@ def is_not(matcher):
     return NotMatcher(as_matcher(matcher))
 
 
-# def flat(x):
-#     match x:
-#         case []:
-#             return []
-#         case [[*sublist], *r]:
-#             return [*sublist, *flat(r)]
-#         case [x, *r]:
-#             return [x, *flat(r)]
-#         case x:
-#             return [x]
-
-
 class IdentitySet(MutableSet):
     def __init__(self, iterable=()):
         self.map = {}
@@ -62,7 +50,7 @@ class IdentitySet(MutableSet):
         return len(self.map)
 
     def __iter__(self):
-        return self.map.values()
+        return iter(self.map.values())
 
     def __contains__(self, x):
         return id(x) in self.map

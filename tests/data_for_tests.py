@@ -19,6 +19,11 @@ class ATest(object):
     inner_list: List[InnerTest]
 
 
+@dataclass
+class BTest(ATest):
+    z: int
+
+
 obj_test = ATest(
     x=4,
     y=8,

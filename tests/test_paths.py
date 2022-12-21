@@ -421,3 +421,16 @@ def test_composed_dict_path_rec_named(path, data, expected):
     res = p.resolve_from(data)
     assert len(res) == len(expected)
     assert res == expected
+
+
+def test_object_path_idenpotent():
+    p = as_path("name")
+
+    assert p.as_path() is p
+    assert as_path(p) is p
+
+
+def test_resolve_unexisting():
+    p = as_path("name>unexisting")
+
+    assert p.resolve_from(obj_test) == []
