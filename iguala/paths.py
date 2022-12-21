@@ -1,4 +1,4 @@
-from types import LambdaType
+# from types import LambdaType
 
 from .helpers import IdentitySet, flat
 
@@ -28,24 +28,21 @@ class DirectPath(ObjectPath):
         self.path = path
 
     def resolve_from(self, obj):
-        try:
-            return flat(getattr(obj, self.path, []))
-        except AttributeError:
-            return []
+        return flat(getattr(obj, self.path, []))
 
 
-class LambdaPath(ObjectPath):
-    def __init__(self, func):
-        self.func = func
+# class LambdaPath(ObjectPath):
+#     def __init__(self, func):
+#         self.func = func
 
-    def resolve_from(self, obj):
-        raw_path = self.func()
-        path = as_path(raw_path)
-        import ipdb
+#     def resolve_from(self, obj):
+#         raw_path = self.func()
+#         path = as_path(raw_path)
+#         import ipdb
 
-        ipdb.set_trace()
+#         ipdb.set_trace()
 
-        return path.resolve_from(obj)
+#         return path.resolve_from(obj)
 
 
 class ComposedPath(ObjectPath):
@@ -100,9 +97,6 @@ class NamedRecursivePath(RecursivePath):
 
 
 class ChildrenRecursivePath(RecursivePath):
-    def __init__(self):
-        ...
-
     def _resolve_from(self, obj, seen):
         direct_objects = []
         try:
@@ -125,10 +119,8 @@ def as_path(s, dictkey=False):
     if isinstance(s, str) and ">" in s:
         paths = tuple(as_path(p, dictkey=dictkey) for p in s.split(">"))
         return ComposedPath(paths)
-    if isinstance(s, ObjectPath):
-        return s
-    if isinstance(s, LambdaType):
-        return LambdaPath(s)
+    # if isinstance(s, LambdaType):
+    #     return LambdaPath(s)
     if not isinstance(s, str):
         return s.as_path()
     if s == "*":

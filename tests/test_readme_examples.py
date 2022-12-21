@@ -1,4 +1,4 @@
-from ast import *
+from ast import parse, Module, ClassDef, Assign, arg, FunctionDef
 
 from iguala import match
 
