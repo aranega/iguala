@@ -207,7 +207,7 @@ class KeyValueMatcher(object):
     def match_context(self, obj, context):
         context.is_match = True
         new_contexts = [context]
-        for path, matcher in self.properties.items():
+        for path, matcher in self.properties:
             results = []
             for context in new_contexts:
                 if matcher.is_collection_matcher:
@@ -251,9 +251,12 @@ class ObjectMatcher(KeyValueMatcher, Matcher):
     def properties(self, properties):
         if properties is None:
             self._properties = {}
+            return
+        elif isinstance(properties, dict):
+            props = [(as_path(k), as_matcher(v)) for k, v in properties.items()]
         else:
-            props = {as_path(k): as_matcher(v) for k, v in properties.items()}
-            self._properties = props
+            props = [(as_path(sl.start), as_matcher(sl.stop)) for sl in properties]
+        self._properties = props
 
 
 class DictMatcher(KeyValueMatcher, Matcher):

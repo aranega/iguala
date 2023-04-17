@@ -13,6 +13,10 @@ class match(object):
         self.matcher.properties = properties
         return self.matcher
 
+    def __getitem__(self, keys):
+        self.matcher.properties = keys if isinstance(keys, tuple) else [keys]
+        return self.matcher
+
     def __matmul__(self, alias):
         from .matchers import SaveNodeMatcher
 

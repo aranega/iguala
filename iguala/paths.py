@@ -1,4 +1,5 @@
 # from types import LambdaType
+from functools import lru_cache
 
 from .helpers import IdentitySet, flat
 
