@@ -1,4 +1,5 @@
 from collections.abc import MutableMapping
+import itertools
 from re import compile
 from types import LambdaType
 
@@ -109,6 +110,9 @@ class Matcher(object):
     def __or__(self, right):
         return OrMatcher(self, as_matcher(right))
 
+    def __ror__(self, left):
+        return OrMatcher(as_matcher(left), self)
+
     def save_as(self, alias):
         return SaveNodeMatcher(alias, self)
 
@@ -197,10 +201,9 @@ class OrMatcher(Matcher):
         self.right = right
 
     def match_context(self, obj, context):
-        contexts = self.left.match_context(obj, context)
-        if any(c.is_match for c in contexts):
-            return contexts
-        return self.right.match_context(obj, context)
+        left_contexts = self.left.match_context(obj, context.copy())
+        right_contexts = self.right.match_context(obj, context.copy())
+        return [c for c in left_contexts + right_contexts if c.is_match]
 
 
 class KeyValueMatcher(object):
