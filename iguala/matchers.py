@@ -1,4 +1,5 @@
 from collections.abc import MutableMapping
+import itertools
 from re import compile
 from types import LambdaType
 
@@ -109,6 +110,9 @@ class Matcher(object):
     def __or__(self, right):
         return OrMatcher(self, as_matcher(right))
 
+    def __ror__(self, left):
+        return OrMatcher(as_matcher(left), self)
+
     def save_as(self, alias):
         return SaveNodeMatcher(alias, self)
 
@@ -197,17 +201,16 @@ class OrMatcher(Matcher):
         self.right = right
 
     def match_context(self, obj, context):
-        contexts = self.left.match_context(obj, context)
-        if any(c.is_match for c in contexts):
-            return contexts
-        return self.right.match_context(obj, context)
+        left_contexts = self.left.match_context(obj, context.copy())
+        right_contexts = self.right.match_context(obj, context.copy())
+        return [c for c in left_contexts + right_contexts if c.is_match]
 
 
 class KeyValueMatcher(object):
     def match_context(self, obj, context):
         context.is_match = True
         new_contexts = [context]
-        for path, matcher in self.properties.items():
+        for path, matcher in self.properties:
             results = []
             for context in new_contexts:
                 if matcher.is_collection_matcher:
@@ -251,9 +254,12 @@ class ObjectMatcher(KeyValueMatcher, Matcher):
     def properties(self, properties):
         if properties is None:
             self._properties = {}
+            return
+        elif isinstance(properties, dict):
+            props = [(as_path(k), as_matcher(v)) for k, v in properties.items()]
         else:
-            props = {as_path(k): as_matcher(v) for k, v in properties.items()}
-            self._properties = props
+            props = [(as_path(sl.start), as_matcher(sl.stop)) for sl in properties]
+        self._properties = props
 
 
 class DictMatcher(KeyValueMatcher, Matcher):

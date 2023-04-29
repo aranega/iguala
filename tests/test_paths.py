@@ -107,6 +107,38 @@ def test_itself():
     assert result.is_match
 
 
+def test_itself2():
+    path = as_path("x>y*")
+    matcher = match(ComposedPath)[
+        "paths" : [
+            match(DirectPath)["path":"x"],
+            match(NamedRecursivePath)["path" : match(DirectPath) % {"path": "y"}],
+        ]
+    ]
+    result = matcher.match(path)
+    assert result.is_match
+
+    path = as_path("x*>y*")
+    matcher = match(ComposedPath)[
+        "paths" : [
+            match(NamedRecursivePath)["path" : match(DirectPath) % {"path": "x"}],
+            match(NamedRecursivePath)["path" : match(DirectPath) % {"path": "y"}],
+        ]
+    ]
+    result = matcher.match(path)
+    assert result.is_match
+
+    path = as_path("x+")
+    matcher = match(ComposedPath)[
+        "paths" : [
+            match(DirectPath)["path":"x"],
+            match(NamedRecursivePath)["path" : match(DirectPath) % {"path": "x"}],
+        ]
+    ]
+    result = matcher.match(path)
+    assert result.is_match
+
+
 @pytest.mark.parametrize(
     "path, data, expected",
     [

@@ -1,6 +1,7 @@
-from iguala import match, is_not
+from iguala import is_not, match
 from iguala.helpers import IdentitySet
 from iguala.matchers import LiteralMatcher, NotMatcher, SaveNodeMatcher
+
 from .data_for_tests import ATest
 
 
@@ -13,7 +14,7 @@ def test_builder():
     assert pattern.and_subclasses.matcher.subclassmatch is True
 
     pattern.such_as({"x": 3})
-    k, v = list(pattern.matcher.properties.items())[0]
+    k, v = list(pattern.matcher.properties)[0]
     assert k.path == "x"
     assert isinstance(v, LiteralMatcher)
 

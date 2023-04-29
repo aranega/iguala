@@ -1,5 +1,6 @@
 import pytest
-from iguala import as_matcher, match, is_not
+
+from iguala import as_matcher, is_not, match
 
 
 class A(object):

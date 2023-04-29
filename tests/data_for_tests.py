@@ -58,6 +58,40 @@ obj_test = ATest(
     ),
 )
 
+obj_test2 = ATest(
+    x=4,
+    y=8,
+    name="ATest name",
+    inner=InnerTest(name="foo", value=3),
+    inner_list=(
+        InnerTest(
+            name="foo",
+            value=4,
+            active=True,
+            children=[
+                InnerTest(
+                    name="foo.foo",
+                    value=8,
+                    active=True,
+                    children=[
+                        InnerTest(
+                            name="foo.foo.bar",
+                            value=1,
+                            children=[
+                                InnerTest(name="foo.foo.bar.bar", value=1),
+                                InnerTest(name="foo.foo.bar.baz", value=2, active=True),
+                            ],
+                        ),
+                        InnerTest(name="foo.foo.baz", value=2),
+                    ],
+                )
+            ],
+        ),
+        InnerTest(name="bar", value=3, active=True),
+        InnerTest(name="foo", value=4),
+    ),
+)
+
 
 dict_test = {
     "x": 4,

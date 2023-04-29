@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 0.5.0
+
+### Features
+
+* Add new syntax to describe patterns and matchers
+
+### Fixes
+
+* Fix issue with `or` matcher. The matcher was cutting some search branch way too early, resulting in incomplete behaviors in some cases.
+
+
+
 ## 0.4.0
 
 ### Features
