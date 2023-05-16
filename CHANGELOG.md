@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.5.1
+
+### Fixes
+
+* Fix issue in the dict matcher, the path were badly interpreted.
+
+
 ## 0.5.0
 
 ### Features
