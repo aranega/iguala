@@ -264,9 +264,9 @@ class ObjectMatcher(KeyValueMatcher, Matcher):
 
 class DictMatcher(KeyValueMatcher, Matcher):
     def __init__(self, d):
-        self.properties = {
-            as_path(k, dictkey=True): as_matcher(v) for k, v in d.items()
-        }
+        self.properties = [
+            (as_path(k, dictkey=True), as_matcher(v)) for k, v in d.items()
+        ]
 
 
 class LambdaBasedMatcher(Matcher):
