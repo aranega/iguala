@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.5.2
+
+### Fixes
+
+* Fix issue in the regex matcher where `None` was actually used as target for the regex.
+
+
 ## 0.5.1
 
 ### Fixes
