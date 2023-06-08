@@ -326,6 +326,9 @@ class RegexMatcher(Matcher):
         return self
 
     def match_context(self, obj, context):
+        if obj is None:
+            context.is_match = False
+            return [context]
         result = self.regexp.match(obj)
         context.is_match = result is not None
         if self.label:
