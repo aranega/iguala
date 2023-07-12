@@ -1,20 +1,20 @@
 # CHANGELOG
 
-## 0.5.2
+## 0.5.2
 
 ### Fixes
 
 * Fix issue in the regex matcher where `None` was actually used as target for the regex.
 
 
-## 0.5.1
+## 0.5.1
 
 ### Fixes
 
 * Fix issue in the dict matcher, the path were badly interpreted.
 
 
-## 0.5.0
+## 0.5.0
 
 ### Features
 
@@ -26,7 +26,7 @@
 
 
 
-## 0.4.0
+## 0.4.0
 
 ### Features
 
@@ -37,7 +37,7 @@
 * Fix issue with matcher wrappers and collections. When a container matcher (`SaveNodeMatcher` or `NotMatcher`) is used, it needs to be considered as a collection matcher only if the matcher it wrapps is a collection matcher.
 
 
-### Misc.
+### Misc.
 
 * More tests
 
