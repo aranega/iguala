@@ -3,10 +3,10 @@ from itertools import chain
 
 
 class match(object):
-    def __init__(self, cls):
+    def __init__(self, cls, name=None):
         from .matchers import ObjectMatcher
 
-        self.matcher = ObjectMatcher(cls)
+        self.matcher = ObjectMatcher(cls, name=name)
         self.matcher.properties = {}
 
     def __mod__(self, properties):

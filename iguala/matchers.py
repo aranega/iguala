@@ -50,6 +50,7 @@ class Context(MutableMapping):
         self._is_match = truth
         self.truth = truth
         self.delayed_matchers = []
+        self.known_subpatterns = {}
 
     def __getitem__(self, key):
         return self.bindings[key]
@@ -85,6 +86,7 @@ class Context(MutableMapping):
         instance = self.__class__(self.truth)
         instance.bindings.update(self.bindings)
         instance.delayed_matchers.extend(self.delayed_matchers)
+        instance.known_subpatterns.update(self.known_subpatterns)
         return instance
 
 
@@ -154,7 +156,15 @@ class SaveNodeMatcher(Matcher):
         return self
 
     def match_context(self, obj, context):
-        context[self.alias] = obj
+        if self.alias in context:
+            res = context[self.alias]
+            if isinstance(res, list):
+                context[self.alias].extend(res)
+            else:
+                context[self.alias] = [res]
+            context[self.alias].append(obj)
+        else:
+            context[self.alias] = obj
         return self.matcher.match_context(obj, context)
 
 
@@ -234,12 +244,15 @@ class KeyValueMatcher(object):
 
 
 class ObjectMatcher(KeyValueMatcher, Matcher):
-    def __init__(self, cls, properties=None, subclassmatch=False):
+    def __init__(self, cls, properties=None, subclassmatch=False, name=None):
         self.properties = properties
         self.cls = cls
         self.subclassmatch = subclassmatch
+        self.name = name
 
     def match_context(self, obj, context):
+        if self.name:
+            context.known_subpatterns[self.name] = self
         sametype = (
             isinstance(obj, self.cls)
             if self.subclassmatch
@@ -377,6 +390,15 @@ class ListWildcardMatcher(WildcardMatcher):
     @property
     def is_anonymous(self):
         return not self.alias or super().is_anonymous
+
+
+class RecursiveMatcherReference(Matcher):
+    def __init__(self, name):
+        self.name = name
+
+    def match_context(self, obj, context):
+        subpattern = context.known_subpatterns[self.name]
+        return subpattern.match_context(obj, context)
 
 
 class SequenceMatcher(Matcher):
@@ -600,4 +622,5 @@ def as_matcher(obj):
 cond = ConditionalMatcher
 regex = RegexMatcher
 is_ = IdentityMatcher
+rec = RecursiveMatcherReference
 save_as = lambda alias: SaveNodeMatcher(alias, None)
