@@ -149,6 +149,10 @@ class SaveNodeMatcher(Matcher):
     def is_list_wildcard(self):
         return self.matcher.is_list_wildcard
 
+    def __rmatmul__(self, other):
+        self.matcher = as_matcher(other)
+        return self
+
     def match_context(self, obj, context):
         context[self.alias] = obj
         return self.matcher.match_context(obj, context)
@@ -596,3 +600,4 @@ def as_matcher(obj):
 cond = ConditionalMatcher
 regex = RegexMatcher
 is_ = IdentityMatcher
+save_as = lambda alias: SaveNodeMatcher(alias, None)
