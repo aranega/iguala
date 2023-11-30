@@ -584,7 +584,7 @@ def as_matcher(obj):
         return LiteralMatcher(obj)
     if obj is Ellipsis:
         return ListWildcardMatcher("")
-    if isinstance(obj, list):
+    if isinstance(obj, (list, tuple)):
         return SequenceMatcher(obj)
     if isinstance(obj, dict):
         return DictMatcher(obj)
