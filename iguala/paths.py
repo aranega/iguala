@@ -1,6 +1,4 @@
 # from types import LambdaType
-from functools import lru_cache
-
 from .helpers import IdentitySet, flat
 
 
@@ -30,6 +28,29 @@ class DirectPath(ObjectPath):
 
     def resolve_from(self, obj):
         return flat(getattr(obj, self.path, []))
+
+
+class WildcardPath(ObjectPath):
+    def __init__(self, excluding=None):
+        self.excluding = excluding or []
+
+    def resolve_from(self, obj):
+        direct_objects = []
+        try:
+            visit = vars(obj).items()
+        except TypeError:
+            try:
+                visit = {k: getattr(obj, k) for k in obj.__class__.__slots__}.items()
+            except AttributeError:
+                try:
+                    visit = obj.items()
+                except AttributeError:
+                    return []
+        for k, v in visit:
+            if k in self.excluding:
+                continue
+            direct_objects.extend(flat(v))
+        return direct_objects
 
 
 # class LambdaPath(ObjectPath):
@@ -75,12 +96,15 @@ class RecursivePath(ObjectPath):
         if obj not in seen:
             seen.add(obj)
         direct_objects.extend(
-            flat([self._resolve_from(x, seen) for x in direct_objects])
+            flat([self._inner_resolve_from(x, seen) for x in direct_objects])
         )
         return direct_objects
 
+    def _inner_resolve_from(self, obj, seen):
+        return []
+
     def resolve_from(self, obj):
-        res = self._resolve_from(obj, IdentitySet())
+        res = self._inner_resolve_from(obj, IdentitySet())
         return res
 
     @property
@@ -92,13 +116,13 @@ class NamedRecursivePath(RecursivePath):
     def __init__(self, path):
         self.path = path
 
-    def _resolve_from(self, obj, seen):
+    def _inner_resolve_from(self, obj, seen):
         o = self.path.resolve_from(obj)
         return super()._resolve_from(obj, seen, o)
 
 
 class ChildrenRecursivePath(RecursivePath):
-    def _resolve_from(self, obj, seen):
+    def _inner_resolve_from(self, obj, seen):
         direct_objects = []
         try:
             visit = vars(obj).items()
@@ -124,6 +148,8 @@ def as_path(s, dictkey=False):
     #     return LambdaPath(s)
     if not isinstance(s, str):
         return s.as_path()
+    if s == '_':
+        return WildcardPath()
     if s == "*":
         return ChildrenRecursivePath()
     if isinstance(s, str):
@@ -136,5 +162,6 @@ def as_path(s, dictkey=False):
                     NamedRecursivePath(as_path(s[:-1], dictkey=dictkey)),
                 )
             )
-
+    if s.startswith('!'):
+        return WildcardPath(excluding=[s[1:]])
     return dict_cls(s)

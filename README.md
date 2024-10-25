@@ -86,6 +86,9 @@ There is different kind of paths:
     * creating a named rec. path is done by using the `*` or `+` operator after a name, e.g: `foo*` expresses that `foo` needs to be followed 0 or many times and `foo+` expresses that `foo` needs to be followed 1 or many times.
 * **children recursive paths**: they express the recursive navigation of all "instance variable" of an object.
     * creating a children rec. path is done by using `*` alone, e.g: `*` means all the "children" (the instance variable of the object/keys of the dict) and their children.
+* **wildcard direct paths**: they express a direct connection between objects without naming explicitally the relationship (e.g: "any of the direct connection from this object to another")
+* **excluding paths**: they express a path towards any direct relationship excluding a specific relation from them (e.g: "any of the direct connection from this object to another excluding this connection").
+  * creatin an excluding path is done by using `!` in front of the relationship to exclude, e.g: `!parent` means "all the direct paths excluding `parent`.
 
 Those operators can be composed with `>`.
 For examples:
@@ -93,6 +96,7 @@ For examples:
 * `bar>foo>*` means "`bar` then `foo` then all the children recursively"
 * `*>foo` means "all the children recursively then `foo`" (if `foo` exists for each object)
 * `child*>name` means "follow `child` recursively and get `name` each time"
+* `!parent*` means "follow all the direct relationship from object to object recursively, but excluding `parent` each time
 * ...
 
 ### Wildcards/variables

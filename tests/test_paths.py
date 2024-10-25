@@ -466,3 +466,15 @@ def test_resolve_unexisting():
     p = as_path("name>unexisting")
 
     assert p.resolve_from(obj_test) == []
+
+
+def test_resolve_wildcard_path():
+    p = as_path("_")
+
+    assert p.resolve_from(obj_test) == [4, 8, obj_test.name, obj_test.inner, *obj_test.inner_list]
+
+
+def test_resolve_named_path_excluding():
+    p = as_path("!inner_list")
+
+    assert p.resolve_from(obj_test) == [4, 8, obj_test.name, obj_test.inner]
