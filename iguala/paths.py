@@ -148,7 +148,7 @@ def as_path(s, dictkey=False):
     #     return LambdaPath(s)
     if not isinstance(s, str):
         return s.as_path()
-    if s == '_':
+    if s == "_":
         return WildcardPath()
     if s == "*":
         return ChildrenRecursivePath()
@@ -162,6 +162,6 @@ def as_path(s, dictkey=False):
                     NamedRecursivePath(as_path(s[:-1], dictkey=dictkey)),
                 )
             )
-    if s.startswith('!'):
+    if s.startswith("!"):
         return WildcardPath(excluding=[s[1:]])
     return dict_cls(s)

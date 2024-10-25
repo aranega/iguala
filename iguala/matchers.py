@@ -38,7 +38,13 @@ class MatcherResult(object):
 
     def __getitem__(self, key):
         if isinstance(key, slice):
-            return key.step([binding[key.start] for binding in self.bindings if key.start in binding])
+            return key.step(
+                [
+                    binding[key.start]
+                    for binding in self.bindings
+                    if key.start in binding
+                ]
+            )
         return [binding[key] for binding in self.bindings if key in binding]
 
     def __str__(self):
@@ -176,8 +182,7 @@ class LiteralMatcher(Matcher):
         return [context]
 
 
-class LogicalMatcher(Matcher):
-    ...
+class LogicalMatcher(Matcher): ...
 
 
 class NotMatcher(Matcher):
