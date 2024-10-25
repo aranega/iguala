@@ -239,16 +239,15 @@ class KeyValueMatcher(object):
 
 
 class ObjectMatcher(KeyValueMatcher, Matcher):
-    def __init__(self, cls, properties=None, subclassmatch=False):
+    def __init__(self, classes, properties=None, subclassmatch=False):
         self.properties = properties
-        self.cls = cls
+        self.classes = classes
         self.subclassmatch = subclassmatch
 
     def match_context(self, obj, context):
-        sametype = (
-            isinstance(obj, self.cls)
-            if self.subclassmatch
-            else obj.__class__ == self.cls
+        sametype = any(
+            isinstance(obj, cls) if self.subclassmatch else obj.__class__ == cls
+            for cls in self.classes
         )
         if not sametype:
             context.is_match = False

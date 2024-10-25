@@ -1,12 +1,19 @@
+from __future__ import annotations
 from collections.abc import MutableSet
 from itertools import chain
+from types import UnionType
 
 
 class match(object):
-    def __init__(self, cls):
+    def __init__(self, cls, *classes):
         from .matchers import ObjectMatcher
 
-        self.matcher = ObjectMatcher(cls)
+        if isinstance(cls, UnionType):
+            all_classes = cls.__args__
+        else:
+            all_classes = [cls, *classes]
+
+        self.matcher = ObjectMatcher(all_classes)
         self.matcher.properties = {}
 
     def __mod__(self, properties):

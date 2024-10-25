@@ -114,6 +114,7 @@ Wildcards/variables stores information and checks if the same information appear
 There is few pattern operators.
 
 * `match(...)` with a type as parameter matches exactly a type, e.g: `match(A) % {}` means, match an instance of `A` (but not subclasses).
+  * `match(...)` also supports multiple parameter, e.g: `match(A, B)['name': 'foo']` means, match an instance of `A` or `B` that have `name` property that is equals to `foo`. The same can be achieved also using union type: `match(A | B)['name': 'foo']`. This allows you to consider the same "configuration" for various types.
 * `~` used in front of an object matcher expresses "and all its subclasses", e.g: `~match(object) % {}` means, match an instance of `object` or from its subclasses.
 * `matcher[...]` with slices as indexes which expresses the properties of an object, e.g: `match(A)['name': 'foo']` means, match an instance of `A` where the `name` equals `foo`.
 * `%` with a dictionnary on its right expresses the properties of an object, e.g: `match(A) % {'name': 'foo'}` means, match an instance of `A` where the `name` equals `foo`.

@@ -1,6 +1,6 @@
 from iguala import as_matcher, match
 
-from .data_for_tests import obj_test
+from .data_for_tests import ATest, BTest, InnerTest, obj_test
 
 
 def test_lambda_matcher():
@@ -135,3 +135,19 @@ def test_results_binding_access():
     assert result["y"] == [8]
 
     assert result["x"::set] == {4}
+
+
+def test_match_multiple_types():
+    pattern = match(ATest) % {}
+    assert pattern.match(BTest(0, 0, 'foo', InnerTest('bar', 5), [], 5)).is_match is False
+
+    pattern = match(ATest, BTest) % {}
+    assert pattern.match(BTest(0, 0, 'foo', InnerTest('bar', 5), [], 5)).is_match is True
+
+
+def test_match_union_type():
+    pattern = match(ATest) % {}
+    assert pattern.match(BTest(0, 0, 'foo', InnerTest('bar', 5), [], 5)).is_match is False
+
+    pattern = match(ATest | BTest) % {}
+    assert pattern.match(BTest(0, 0, 'foo', InnerTest('bar', 5), [], 5)).is_match is True
