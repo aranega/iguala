@@ -121,3 +121,17 @@ def test_lambda_matcher_desorder4():
 
     result = pattern.match(obj_test)
     assert result.is_match is False
+
+
+def test_results_binding_access():
+    pattern = (~match(object))[
+        "y": as_matcher(lambda x: x * 2) @ "y",
+        "x": "@x",
+    ]
+    result = pattern.match(obj_test)
+    assert result.is_match is True
+
+    assert result["x"] == [4]
+    assert result["y"] == [8]
+
+    assert result["x"::set] == {4}

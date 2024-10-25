@@ -1,5 +1,4 @@
 from collections.abc import MutableMapping
-import itertools
 from re import compile
 from types import LambdaType
 
@@ -36,6 +35,11 @@ class MatcherResult(object):
     @property
     def bindings(self):
         return [c.bindings for c in self.contexts]
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return key.step([binding[key.start] for binding in self.bindings if key.start in binding])
+        return [binding[key] for binding in self.bindings if key in binding]
 
     def __str__(self):
         return f"<{self.is_match} - {self.bindings}>"
@@ -148,10 +152,6 @@ class SaveNodeMatcher(Matcher):
     @property
     def is_list_wildcard(self):
         return self.matcher.is_list_wildcard
-
-    def __rmatmul__(self, other):
-        self.matcher = as_matcher(other)
-        return self
 
     def match_context(self, obj, context):
         context[self.alias] = obj
@@ -584,7 +584,7 @@ def as_matcher(obj):
         return LiteralMatcher(obj)
     if obj is Ellipsis:
         return ListWildcardMatcher("")
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, list):
         return SequenceMatcher(obj)
     if isinstance(obj, dict):
         return DictMatcher(obj)
@@ -594,7 +594,10 @@ def as_matcher(obj):
         return RangeMatcher(obj)
     if isinstance(obj, type):
         return ObjectMatcher(obj, {})
-    return obj.as_matcher()
+    try:
+        return obj.as_matcher()
+    except AttributeError:
+        return IdentityMatcher(obj)
 
 
 cond = ConditionalMatcher

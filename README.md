@@ -246,11 +246,27 @@ print(result)
 print(result.bindings[0]['value'])
 # displays: 3
 
-print(pattern.match(a2))
+result = pattern.match(a2)
+print(result)
 # displays: <True - [{'value': 4}]>
 print(result.bindings[0]['value'])
 # displays: 4
 ```
+
+There is a convenient way of accessing a specific varible and get its value in all the contexts using the access to dict syntax.
+This allows you to get a list of the value of a variable in each context.
+You can also add a specific list type to create a result of this collection type instead of a pure list.
+
+```python
+# considering the previous example
+result = pattern.match(a1)
+print(result["value"])
+# displays: [3]
+
+print(result["value"::set])
+# displays: {3}
+```
+
 
 Each right side of the property dictionnary that starts with an `@` means that it's a variable.
 If the name is found again in the pattern, then, it means that the data needs to have the same value for those variable in those positions.
