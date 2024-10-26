@@ -1,4 +1,6 @@
+import pytest
 from iguala import as_matcher, match
+import sys
 
 from .data_for_tests import ATest, BTest, InnerTest, obj_test
 
@@ -145,6 +147,7 @@ def test_match_multiple_types():
     assert pattern.match(BTest(0, 0, 'foo', InnerTest('bar', 5), [], 5)).is_match is True
 
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Union notation is not available for Python < 3.10")
 def test_match_union_type():
     pattern = match(ATest) % {}
     assert pattern.match(BTest(0, 0, 'foo', InnerTest('bar', 5), [], 5)).is_match is False

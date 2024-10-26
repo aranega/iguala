@@ -1,14 +1,24 @@
-from __future__ import annotations
 from collections.abc import MutableSet
 from itertools import chain
-from types import UnionType
+
+try:
+    from types import UnionType
+
+    def is_union(o):
+        return isinstance(o, UnionType)
+
+except ImportError:
+    from typing import Union, get_origin
+
+    def is_union(o):
+        return get_origin(o) is Union
 
 
 class match(object):
     def __init__(self, cls, *classes):
         from .matchers import ObjectMatcher
 
-        if isinstance(cls, UnionType):
+        if is_union(cls):
             all_classes = cls.__args__
         else:
             all_classes = [cls, *classes]
