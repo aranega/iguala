@@ -83,6 +83,9 @@ class Context(MutableMapping):
     def __len__(self):
         return len(self.bindings)
 
+    def replace(self, alias, value):
+        self.bindings[alias] = value
+
     @property
     def is_match(self):
         return self._is_match is self.truth
@@ -103,7 +106,11 @@ class Matcher(object):
         return self
 
     @property
-    def is_collection_matcher(self):
+    def is_collection_matcher(self) -> bool:
+        return False
+
+    @property
+    def has_matcher_generator(self) -> bool:
         return False
 
     @property
@@ -152,6 +159,10 @@ class SaveNodeMatcher(Matcher):
         self.matcher = matcher
 
     @property
+    def has_matcher_generator(self):
+        return self.matcher.has_matcher_generator
+
+    @property
     def is_collection_matcher(self):
         return self.matcher.is_collection_matcher
 
@@ -160,6 +171,8 @@ class SaveNodeMatcher(Matcher):
         return self.matcher.is_list_wildcard
 
     def match_context(self, obj, context):
+        if self.has_matcher_generator:
+            self.matcher.delay_alias_binding(obj, self.alias)
         context[self.alias] = obj
         return self.matcher.match_context(obj, context)
 
@@ -222,7 +235,7 @@ class KeyValueMatcher(object):
         for path, matcher in self.properties:
             results = []
             for context in new_contexts:
-                if matcher.is_collection_matcher:
+                if matcher.is_collection_matcher or matcher.has_matcher_generator:
                     cpy = context.copy()
                     results.extend(matcher.match_context(path.resolve_from(obj), cpy))
                 else:
@@ -288,6 +301,10 @@ class LambdaBasedMatcher(Matcher):
             self.vars.remove(self.__self__)
         else:
             self.has_self = False
+        self.delayed_alias_bindings = {}
+
+    def delay_alias_binding(self, value, alias):
+        self.delayed_alias_bindings[alias] = value
 
     def match_context(self, obj, context):
         try:
@@ -301,8 +318,23 @@ class LambdaBasedMatcher(Matcher):
 
 
 class MatcherGenerator(LambdaBasedMatcher):
+    @property
+    def has_matcher_generator(self):
+        return True
+
     def execute(self, obj, context, kwargs):
-        return as_matcher(self.fun(**kwargs)).match_context(obj, context)
+        resolved = as_matcher(self.fun(**kwargs))
+
+        for alias, o in self.delayed_alias_bindings.items():
+            if not resolved.is_collection_matcher:
+                context.replace(alias, o[0])
+
+        if resolved.is_collection_matcher:
+            cpy = context.copy()
+            results = resolved.match_context(obj, cpy)
+        else:
+            results = flat([resolved.match_context(o, context.copy()) for o in obj])
+        return results
 
 
 class ConditionalMatcher(LambdaBasedMatcher):
@@ -321,7 +353,7 @@ class BoundMatcherGenerator(object):
         return all(x in context for x in self.matcher.vars)
 
     def execute(self, context):
-        return self.matcher.match_context(self.self_object, context.copy())
+        return self.matcher.match_context(self.self_object, context)
 
 
 class RegexMatcher(Matcher):

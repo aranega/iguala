@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import pytest
 
 from iguala import as_matcher, is_not, match
@@ -102,3 +103,86 @@ def test_ellipsis_list(pattern, data, expected, variables):
     for ctx, bindings in zip(variables, result.bindings):
         for var, val in ctx.items():
             assert bindings[var] == val
+
+
+def test_sequence_matcher_generator():
+    @dataclass
+    class A:
+        x: int
+        y: int | str
+        tab: list[int | str]
+
+    def i_element_after(i, x, var):
+        return as_matcher([..., x, *["@_"]*i, f"@{var}", ...])
+
+    p = match(A)[
+        "x": "@step",
+        "y": "@y",
+        "tab": lambda step, y: i_element_after(step, y, "res")
+    ]
+
+    a = A(x=2, y="r", tab=[3, 4, "r", 3, 3, 5, 6, "r", 1, 2, 8])
+
+    res = p.match(a)["res"]
+
+    assert len(res) == 2
+    assert res == [5, 8]
+
+
+def test_matcher_generator_iterate_list():
+    @dataclass
+    class A:
+        x: int
+        tab: list[int | str]
+
+    a = A(x=3, tab=[3, 4, "r", 3, 3, 5, 6, "r", 1, 2, 8])
+
+    p = match(A)[
+        "x": "@x",
+        "tab": lambda x: x
+    ]
+
+    res = p.match(a)["x"]
+
+    assert len(res) == 3
+
+
+
+def test_matcher_generator_save_nodes():
+    @dataclass
+    class A:
+        x: int
+        tab: list[int | str]
+
+    a = A(x=3, tab=[3, 4, "r", 3, 3, 5, 6, "r", 1, 2, 8])
+
+    p = match(A)[
+        "x": "@x",
+        "tab": as_matcher(lambda x: x) @ "xx"
+    ]
+
+    res = p.match(a)
+
+    assert len(res["x"]) == 3
+    assert len(res["xx"]) == 3
+    assert res["xx"] == [3, 3, 3]
+
+
+# def test_matcher_generator_inner_save_nodes():
+#     @dataclass
+#     class A:
+#         x: int
+#         tab: list[int | str]
+
+#     a = A(x=3, tab=[3, 4, "r", 3, 3, 5, 6, "r", 1, 2, 8])
+
+#     p = match(A)[
+#         "x": "@x",
+#         "tab": as_matcher(lambda x: as_matcher(lambda z: z) @ "z") @ "xx"
+#     ]
+
+#     res = p.match(a)
+
+#     assert len(res["x"]) == 3
+#     assert len(res["xx"]) == 3
+#     assert res["xx"] == [3, 3, 3]
