@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List, Union
 import pytest
 
 from iguala import as_matcher, is_not, match
@@ -109,8 +110,8 @@ def test_sequence_matcher_generator():
     @dataclass
     class A:
         x: int
-        y: int | str
-        tab: list[int | str]
+        y: Union[int, str]
+        tab: List[Union[int, str]]
 
     def i_element_after(i, x, var):
         return as_matcher([..., x, *["@_"]*i, f"@{var}", ...])
@@ -133,7 +134,7 @@ def test_matcher_generator_iterate_list():
     @dataclass
     class A:
         x: int
-        tab: list[int | str]
+        tab: List[Union[int, str]]
 
     a = A(x=3, tab=[3, 4, "r", 3, 3, 5, 6, "r", 1, 2, 8])
 
@@ -152,7 +153,7 @@ def test_matcher_generator_save_nodes():
     @dataclass
     class A:
         x: int
-        tab: list[int | str]
+        tab: List[Union[int, str]]
 
     a = A(x=3, tab=[3, 4, "r", 3, 3, 5, 6, "r", 1, 2, 8])
 
